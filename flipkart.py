@@ -4,10 +4,23 @@ import boto3
 import json
 from datetime import datetime
 
+# Function to load AWS credentials from an Excel file
+@st.cache_data
+def load_aws_credentials():
+    credentials_df = pd.read_excel('aws_credentials.xlsx')
+    return {
+        'AWS_REGION': credentials_df.loc[0, 'AWS_REGION'],
+        'AWS_ACCESS_KEY': credentials_df.loc[0, 'AWS_ACCESS_KEY'],
+        'AWS_SECRET_KEY': credentials_df.loc[0, 'AWS_SECRET_KEY']
+    }
+
+# Load AWS credentials
+aws_credentials = load_aws_credentials()
+
 # AWS settings
-AWS_REGION = 'location'
-AWS_ACCESS_KEY = 'Access key'
-AWS_SECRET_KEY = 'secret key'
+AWS_REGION = aws_credentials['AWS_REGION']
+AWS_ACCESS_KEY = aws_credentials['AWS_ACCESS_KEY']
+AWS_SECRET_KEY = aws_credentials['AWS_SECRET_KEY']
 
 # Create a boto3 client for Kinesis
 kinesis_client = boto3.client(
@@ -105,16 +118,3 @@ else:
 
     if filtered_data.empty:
         st.write("No products found")
-
-    # Display clickstream data from DynamoDB
-    st.subheader('Real-Time Clickstream Data Analysis')
-
-    clickstream_data = get_clickstream_data()
-    if not clickstream_data.empty:
-        st.dataframe(clickstream_data)
-        # Summing click counts for visualization
-        click_summary = clickstream_data.groupby('product_name')['click_count'].sum().reset_index()
-        st.bar_chart(click_summary.set_index('product_name')['click_count'])
-    else:
-        st.write("No clickstream data available")
-
