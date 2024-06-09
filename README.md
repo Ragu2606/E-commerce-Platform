@@ -1,99 +1,41 @@
-# E-commerce-Platform
-From Clicks to Deliveries: Maximizing E-commerce Performance with Real-Time Data Integration
+Project: E-commerce Logistics Data Integration with AWS Services
 
-# E-commerce Platform and Fleet Management Integration
+Introduction
 
-## Overview
+This project outlines the development of a real-time data integration solution for an e-commerce company's online platform and delivery truck fleet. The goal is to seamlessly integrate clickstream data from the website and telemetry data from IoT sensors installed in trucks to optimize customer experience, logistics efficiency, and operational insights.
 
-This project aims to integrate real-time data streams from an e-commerce platform and a fleet of delivery trucks to optimize operations and customer satisfaction. The data will be processed using AWS Kinesis and AWS Lambda, and stored in DynamoDB for historical analysis.
+Data Streams and Processing
 
-## Components
+Clickstream Data (Real-time)
+Item ID
+Item Name
+Click Count
+This data will be used to understand customer preferences, personalize marketing strategies, and enhance user experience for key product categories (mobile phones, laptops, cameras).
+Truck Telemetry Data (Near Real-time - every 1 minute)
+Truck ID
+GPS Location (Latitude, Longitude, Altitude, Speed)
+Vehicle Speed
+Engine Diagnostics (Engine RPM, Fuel Level, Temperature, Oil Pressure, Battery Voltage)
+Odometer Reading
+Fuel Consumption
+Vehicle Health and Maintenance (Brake Status, Tire Pressure, Transmission Status)
+Environmental Conditions (Temperature, Humidity, Atmospheric Pressure)
+This data will be used to optimize delivery routes, reduce fuel consumption, proactively address maintenance issues, ensure vehicle safety, and gain insights into fleet operations.
+AWS Services
 
-1. **Clickstream Data API**: Captures and retrieves clickstream data.
-2. **Truck Telemetry Data API**: Captures and retrieves telemetry data from delivery trucks.
-3. **AWS Kinesis**: Streams real-time data for processing.
-4. **AWS Lambda**: Processes data and stores it in DynamoDB.
-5. **DynamoDB**: Stores processed data for historical analysis.
+Kinesis Firehose (Data Ingestion)
+Continuously capture and ingest real-time clickstream and truck telemetry data streams in a format compatible with downstream processing.
+Lambda Functions (Data Processing)
+Process ingested data streams to extract valuable insights.
+Clickstream data: Analyze customer behavior, generate recommendations, personalize marketing.
+Truck telemetry data: Implement route optimization algorithms, predict maintenance needs, monitor fuel efficiency, track environmental impact.
+Snowflake/DynamoDB (Data Storage)
+Store processed clickstream and truck telemetry data for historical analysis, reporting, and integration with other business systems.
+Snowflake (preferred): Provides a scalable, cloud-based data warehouse solution for historical data storage and complex analytics.
+DynamoDB (alternative): Offers a NoSQL database suitable for storing frequently accessed truck telemetry data with high throughput and low latency.
+SCD (Slowly Changing Dimension) Type 2 for Truck Data
 
-## Setup Instructions
+This approach maintains historical data for each truck's attributes by adding the following columns to the database schema:
 
-### API Setup
-
-1. Install dependencies:
-    ```bash
-    pip install flask boto3
-    ```
-
-2. Create the `clickstream` API:
-    - Save the code in `clickstream_api.py` and run:
-        ```bash
-        python clickstream_api.py
-        ```
-
-3. Create the `truck` API:
-    - Save the code in `truck_api.py` and run:
-        ```bash
-        python truck_api.py
-        ```
-
-### AWS Setup
-
-1. **Kinesis Streams**
-    - Create two Kinesis streams: `clickstream` and `truckstream`.
-
-2. **DynamoDB Tables**
-    - Create `ClickstreamData` table with `item_id` and `timestamp` as keys.
-    - Create `TruckTelemetryData` table with `truck_id` and `timestamp` as keys.
-
-3. **Lambda Functions**
-    - Create `process_clickstream` and `process_truckstream` Lambda functions.
-    - Add the provided code to the respective Lambda functions.
-    - Set up the triggers from the Kinesis streams to the Lambda functions.
-
-### Data Processing
-
-1. **Sending Clickstream Data**
-    - Use the `clickstream` API to send clickstream data.
-    - Example payload:
-        ```json
-        {
-            "item_id": "123",
-            "item_name": "Mobile Phone",
-            "click_count": 10
-        }
-        ```
-
-2. **Sending Truck Telemetry Data**
-    - Use the `truck` API to send telemetry data.
-    - Example payload:
-        ```json
-        {
-            "truck_id": "TRK001",
-            "gps_location": {
-                "latitude": 34.052235,
-                "longitude": -118.243683,
-                "altitude": 89.0,
-                "speed": 65.0
-            },
-            "vehicle_speed": 65.0,
-            "engine_diagnostics": {
-                "engine_rpm": 2500,
-                "fuel_level": 75.0,
-                "temperature": 90.0,
-                "oil_pressure": 40.0,
-                "battery_voltage": 13.8
-            },
-            "odometer_reading": 102345.6,
-            "fuel_consumption": 15.5,
-            "vehicle_health_and_maintenance": {
-                "brake_status": "Good",
-                "tire_pressure": {
-                    "front_left": 32.0,
-                    "front_right": 32.0,
-                    "rear_left": 35.0,
-                    "rear_right": 35.0
-                },
-                "transmission_status": "Operational"
-            },
-            "environmental_conditions": {
-           
+Effective From (Timestamp): Denotes the start time when a specific data point becomes valid.
+Effective To (Timestamp): Denotes the end time when a specific data point becomes invalid (null for the current record).
