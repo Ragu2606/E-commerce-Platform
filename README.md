@@ -1,17 +1,28 @@
 Project: E-commerce Logistics Data Integration with AWS Services
 
+
 Introduction
+
 
 This project outlines the development of a real-time data integration solution for an e-commerce company's online platform and delivery truck fleet. The goal is to seamlessly integrate clickstream data from the website and telemetry data from IoT sensors installed in trucks to optimize customer experience, logistics efficiency, and operational insights.
 
+
 Data Streams and Processing
 
+
 Clickstream Data (Real-time)
+
 Item ID
+
 Item Name
+
 Click Count
+
 This data will be used to understand customer preferences, personalize marketing strategies, and enhance user experience for key product categories (mobile phones, laptops, cameras).
+
+
 Truck Telemetry Data (Near Real-time - every 1 minute)
+
 Truck ID
 GPS Location (Latitude, Longitude, Altitude, Speed)
 Vehicle Speed
