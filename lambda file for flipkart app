@@ -1,0 +1,66 @@
+import json
+import base64
+import boto3
+from botocore.exceptions import ClientError
+
+dynamodb = boto3.client('dynamodb')
+
+TABLE_NAME = 'ClickstreamData'
+
+def lambda_handler(event, context):
+    for record in event['Records']:
+        try:
+            kinesis_data = record['kinesis']['data']
+            if not kinesis_data:
+                raise ValueError("Empty Kinesis data")
+            
+            # Decode the Kinesis data from base64
+            decoded_data = base64.b64decode(kinesis_data).decode('utf-8')
+            print(f"Decoded Kinesis data: {decoded_data}")
+            
+            # Parse the decoded data as JSON
+            payload = json.loads(decoded_data)
+            print(f"Parsed JSON payload: {payload}")
+
+            item_id = payload['item_id']
+            click_count = payload['click_count']
+            product_category = payload['product_category']
+            product_name = payload['product_name']
+
+            # Use a conditional update to handle the missing attribute case
+            response = dynamodb.update_item(
+                TableName=TABLE_NAME,
+                Key={
+                    'item_id': {'S': str(item_id)}
+                },
+                UpdateExpression="SET click_count = if_not_exists(click_count, :start) + :val, product_category = :pc, product_name = :pn",
+                ExpressionAttributeValues={
+                    ':start': {'N': '0'},
+                    ':val': {'N': str(click_count)},
+                    ':pc': {'S': product_category},
+                    ':pn': {'S': product_name}
+                },
+                ReturnValues="UPDATED_NEW"
+            )
+            print(f"Update response: {response}")
+
+        except json.JSONDecodeError as e:
+            print(f"JSONDecodeError: {str(e)} - Decoded Kinesis data: {decoded_data}")
+        except ValueError as e:
+            print(f"ValueError: {str(e)}")
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                print(f"ResourceNotFoundException: The table {TABLE_NAME} does not exist.")
+            elif e.response['Error']['Code'] == 'ValidationException':
+                print(f"ValidationException: {e}")
+            else:
+                print(f"Unexpected ClientError: {e}")
+        except KeyError as e:
+            print(f"KeyError: Missing key in the payload - {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Processed successfully')
+    }
