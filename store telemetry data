@@ -1,0 +1,47 @@
+import json
+import boto3
+import requests
+from decimal import Decimal
+
+# Initialize DynamoDB client
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('TruckTelemetryData')
+
+# Function to convert float to Decimal
+def float_to_decimal(value):
+    if isinstance(value, float):
+        return Decimal(str(value))
+    elif isinstance(value, list):
+        return [float_to_decimal(i) for i in value]
+    elif isinstance(value, dict):
+        return {k: float_to_decimal(v) for k, v in value.items()}
+    return value
+
+# Function to fetch truck data from an API endpoint
+def fetch_truck_data_from_api():
+    api_url = "https://qnzhotwtl5.execute-api.ap-south-1.amazonaws.com/production/lambda_function"  # Replace with your API endpoint URL
+    response = requests.get(api_url)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception(f"Failed to fetch data from API. Status code: {response.status_code}")
+
+def lambda_handler(event, context):
+    try:
+        # Fetch truck data from the API
+        truck_data_list = fetch_truck_data_from_api()
+
+        # Store each truck's data in DynamoDB
+        for truck_data in truck_data_list:
+            truck_data_decimal = float_to_decimal(truck_data)
+            table.put_item(Item=truck_data_decimal)
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"message": "Data stored successfully in DynamoDB", "data": truck_data_list})
+        }
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"message": str(e)})
+        }
